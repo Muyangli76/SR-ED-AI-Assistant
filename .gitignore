@@ -1,0 +1,4 @@
+__pycache__/
+.env
+openai_key.txt
+static/uploads/
