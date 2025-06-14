@@ -46,21 +46,24 @@ async def extract_from_text(input: TextInput):
 # Handle file-based input
 def extract_text_from_file(file: UploadFile) -> str:
     filename = file.filename.lower()
+    content = file.file.read()  # Read once
+    buffer = io.BytesIO(content)  # Reusable stream
 
     if filename.endswith(".pdf"):
-        with pdfplumber.open(io.BytesIO(file.file.read())) as pdf:
+        with pdfplumber.open(buffer) as pdf:
             return "\n".join([page.extract_text() or "" for page in pdf.pages])
 
     elif filename.endswith(".docx"):
-        doc = Document(io.BytesIO(file.file.read()))
+        doc = Document(buffer)
         return "\n".join([p.text for p in doc.paragraphs if p.text.strip()])
 
     elif filename.endswith(".csv"):
-        df = pd.read_csv(io.BytesIO(file.file.read()))
+        df = pd.read_csv(buffer)
         return df.to_string(index=False)
 
     else:
         return "⚠️ Unsupported file type. Upload a PDF, DOCX, or CSV."
+
 
 @app.post("/extract-from-file")
 async def extract_from_file(file: UploadFile = File(...)):
